@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Cross-cutting API conventions shared by the four .NET services: one error shape, one
+    validation-failure format, one Swagger setup, one pagination contract.
+
+    Named Smartek.* rather than Stagiaire.* on purpose — inside Stagiaire.Service the entity type
+    `Stagiaire.Service.Models.Stagiaire` shadows a `Stagiaire` root namespace, which is why that
+    service already needs `using StagiaireEntity = ...`. A separate root avoids inheriting that
+    problem here.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Smartek.Common</AssemblyName>
+    <RootNamespace>Smartek.Common</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.7.3" />
+    <!-- For the async COUNT/Skip/Take in Pagination/PagedResult.cs. Version matches the
+         EF Core that Npgsql.EntityFrameworkCore.PostgreSQL 8.0.8 pulls into each service. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.8" />
+    <!-- AddDbContextCheck for the readiness probe. -->
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="8.0.8" />
+    <PackageReference Include="prometheus-net.AspNetCore" Version="8.2.0" />
+  </ItemGroup>
+
+</Project>

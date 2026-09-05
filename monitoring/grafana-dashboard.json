@@ -1,0 +1,37 @@
+{
+  "dashboard": {
+    "title": "Gestion des Stagiaires STB",
+    "panels": [
+      {
+        "title": "CPU Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum(rate(container_cpu_usage_seconds_total[2m]))",
+            "legendFormat": "{{name}}"
+          }
+        ]
+      },
+      {
+        "title": "Memory Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum(container_memory_usage_bytes)",
+            "legendFormat": "{{name}}"
+          }
+        ]
+      },
+      {
+        "title": "HTTP Requests",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total[2m]))",
+            "legendFormat": "{{method}} {{status}}"
+          }
+        ]
+      }
+    ]
+  }
+}

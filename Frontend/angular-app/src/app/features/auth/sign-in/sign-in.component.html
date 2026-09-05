@@ -1,0 +1,144 @@
+<div class="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
+  <!-- Background -->
+  <div class="absolute inset-0 bg-gradient-to-br from-primary via-primary-dark to-primary"></div>
+  
+  <!-- Subtle pattern overlay -->
+  <div class="absolute inset-0 opacity-10">
+    <div class="absolute top-0 left-0 w-full h-full" style="background-image: url('data:image/svg+xml,%3Csvg width=&quot;60&quot; height=&quot;60&quot; viewBox=&quot;0 0 60 60&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;%3E%3Cg fill=&quot;none&quot; fill-rule=&quot;evenodd&quot;%3E%3Cg fill=&quot;%23ffffff&quot; fill-opacity=&quot;0.15&quot;%3E%3Cpath d=&quot;M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z&quot;/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
+  </div>
+  
+  <!-- Animated accents -->
+  <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-accent/10 rounded-full filter blur-3xl animate-pulse"></div>
+  <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/5 rounded-full filter blur-3xl animate-pulse animation-delay-2000"></div>
+
+  <!-- Glassmorphism Container -->
+  <div class="w-full max-w-5xl flex bg-white/95 backdrop-blur-2xl rounded-3xl shadow-2xl overflow-hidden relative z-10 animate-fade-in-up max-h-[90vh] border border-white/20">
+    
+    <!-- Left Side - Form -->
+    <div class="w-full lg:w-1/2 p-8 lg:p-10 animate-slide-in-left overflow-y-auto max-h-[90vh] flex flex-col justify-center">
+      <!-- Header -->
+      <div class="mb-8">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-md">
+            <span class="text-white font-bold text-xl">S</span>
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold text-primary">STB</h1>
+            <p class="text-xs text-gray-400">Société Tunisienne de Banque</p>
+          </div>
+        </div>
+        <h2 class="text-3xl font-bold text-gray-900">Connexion</h2>
+        <p class="text-gray-500 text-sm mt-2">Accédez à votre espace de gestion des stagiaires</p>
+      </div>
+
+      <!-- Form -->
+      <form [formGroup]="signInForm" (ngSubmit)="onSubmit()" class="space-y-5">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+          <div class="relative">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+              </svg>
+            </span>
+            <input type="email" formControlName="email" placeholder="votre@email.com"
+                   class="w-full pl-12 pr-4 py-3.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+          </div>
+          <p *ngIf="signInForm.get('email')?.invalid && signInForm.get('email')?.touched" 
+             class="text-red-500 text-xs mt-1.5">Veuillez entrer une adresse email valide</p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Mot de passe</label>
+          <div class="relative">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+              </svg>
+            </span>
+            <input [type]="showPassword ? 'text' : 'password'" formControlName="password" placeholder="••••••••"
+                   class="w-full pl-12 pr-12 py-3.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+            <button type="button" (click)="togglePasswordVisibility()"
+                    class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      [attr.d]="showPassword ? 'M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21' : 'M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z'"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" [(ngModel)]="rememberMe" [ngModelOptions]="{standalone: true}"
+                   class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
+            <span class="text-sm text-gray-600">Se souvenir de moi</span>
+          </label>
+          <a href="#" class="text-sm text-primary hover:text-primary-dark font-semibold">Mot de passe oublié ?</a>
+        </div>
+
+        <!-- Error Message -->
+        <div *ngIf="errorMessage" class="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+          {{ errorMessage }}
+        </div>
+
+        <button type="submit" [disabled]="!signInForm.valid || isLoading"
+                class="w-full bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary disabled:from-gray-300 disabled:to-gray-300 disabled:cursor-not-allowed text-white py-4 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl">
+          <span *ngIf="!isLoading">Se connecter</span>
+          <span *ngIf="isLoading">Connexion en cours...</span>
+          <svg *ngIf="isLoading" class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </button>
+      </form>
+
+      <div class="mt-6 text-center">
+        <p class="text-sm text-gray-500">
+          Pas encore de compte ?
+          <a routerLink="/auth/sign-up" class="text-accent hover:text-accent-dark font-semibold ml-1">Créer un compte</a>
+        </p>
+      </div>
+    </div>
+
+    <!-- Right Side - Image -->
+    <div class="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-primary to-primary-dark">
+      <div class="absolute inset-0 flex items-center justify-center p-12">
+        <div class="text-center text-white">
+          <div class="w-24 h-24 bg-white/10 backdrop-blur-sm rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-2xl">
+            <span class="text-white font-bold text-4xl">STB</span>
+          </div>
+          <h2 class="text-4xl font-bold mb-4">Gestion des Stagiaires</h2>
+          <p class="text-white/80 text-lg max-w-sm mx-auto">
+            Plateforme moderne de gestion des stages — Société Tunisienne de Banque
+          </p>
+          <div class="mt-8 flex items-center justify-center gap-6 text-white/60 text-sm">
+            <div class="flex items-center gap-2">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+              </svg>
+              <span>Candidatures</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+              </svg>
+              <span>Conventions</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+              </svg>
+              <span>Évaluations</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Decorative elements -->
+      <div class="absolute top-10 right-10 w-20 h-20 bg-white/5 rounded-full"></div>
+      <div class="absolute bottom-20 left-10 w-16 h-16 bg-accent/10 rounded-full"></div>
+      <div class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-bl-full"></div>
+      <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-tr-full"></div>
+    </div>
+  </div>
+</div>

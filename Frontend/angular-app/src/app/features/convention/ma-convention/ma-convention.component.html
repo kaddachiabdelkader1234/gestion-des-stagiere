@@ -1,0 +1,129 @@
+<div class="space-y-8 animate-fade-in">
+  <section class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 to-purple-600 p-8 shadow-2xl">
+    <div class="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
+    <div class="relative z-10 flex items-center space-x-3 text-white">
+      <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+        <span class="material-icons text-white">description</span>
+      </div>
+      <div>
+        <h1 class="text-3xl font-bold mb-1">Ma convention</h1>
+        <p class="text-white/80">Votre convention de stage</p>
+      </div>
+    </div>
+  </section>
+
+  <div *ngIf="erreur" class="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4">
+    <span class="material-icons text-red-600">error_outline</span>
+    <p class="text-sm text-red-800">{{ erreur }}</p>
+  </div>
+
+  <div *ngIf="chargement" class="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 text-center text-gray-500">
+    Chargement…
+  </div>
+
+  <ng-container *ngIf="!chargement">
+    <!-- No candidature at all -->
+    <section *ngIf="aucuneCandidature" class="bg-white rounded-2xl shadow-xl border border-gray-100 p-12 text-center">
+      <span class="material-icons text-5xl text-gray-300">assignment_late</span>
+      <p class="mt-3 font-semibold text-gray-700">Vous n'avez pas encore de candidature.</p>
+      <p class="mt-1 text-sm text-gray-500">
+        Déposez d'abord votre demande de stage depuis « Ma candidature ».
+      </p>
+      <a routerLink="/dashboard/ma-candidature"
+         class="mt-5 inline-block rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg hover:opacity-90">
+        Aller à ma candidature
+      </a>
+    </section>
+
+    <!-- Candidature still pending -->
+    <section *ngIf="candidature && candidature.statut === 'EnAttente'"
+             class="bg-white rounded-2xl shadow-xl border border-gray-100 p-12 text-center">
+      <span class="material-icons text-5xl text-yellow-400">hourglass_empty</span>
+      <p class="mt-3 font-semibold text-gray-700">Votre candidature est en cours d'examen.</p>
+      <p class="mt-1 text-sm text-gray-500">
+        La convention sera établie automatiquement dès que votre candidature sera acceptée.
+      </p>
+    </section>
+
+    <!-- Candidature rejected -->
+    <section *ngIf="candidature && candidature.statut === 'Rejetee'"
+             class="bg-white rounded-2xl shadow-xl border border-gray-100 p-12 text-center">
+      <span class="material-icons text-5xl text-red-300">block</span>
+      <p class="mt-3 font-semibold text-gray-700">Votre candidature n'a pas été retenue.</p>
+      <p *ngIf="candidature.motifRejet" class="mt-2 text-sm text-gray-500">
+        Motif : {{ candidature.motifRejet }}
+      </p>
+      <p class="mt-1 text-sm text-gray-500">Aucune convention n'est établie dans ce cas.</p>
+    </section>
+
+    <!-- Accepted, but the convention row has not appeared yet -->
+    <section *ngIf="candidature && !convention
+                    && candidature.statut !== 'EnAttente' && candidature.statut !== 'Rejetee'"
+             class="bg-white rounded-2xl shadow-xl border border-gray-100 p-12 text-center">
+      <span class="material-icons text-5xl text-gray-300">pending_actions</span>
+      <p class="mt-3 font-semibold text-gray-700">Votre convention est en préparation.</p>
+      <p class="mt-1 text-sm text-gray-500">
+        Elle est établie automatiquement après l'acceptation. Revenez dans quelques instants.
+      </p>
+      <button type="button" (click)="charger()"
+              class="mt-5 rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50">
+        Rafraîchir
+      </button>
+    </section>
+
+    <!-- The convention itself -->
+    <section *ngIf="convention" class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+      <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+        <div>
+          <h2 class="font-bold text-gray-800">Convention de stage</h2>
+          <p class="text-xs text-gray-500">Référence : {{ convention.id }}</p>
+        </div>
+        <span class="px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap"
+              [ngClass]="statutBadges[convention.statutSignature]">
+          {{ statutLabels[convention.statutSignature] }}
+        </span>
+      </div>
+
+      <dl class="divide-y divide-gray-100">
+        <div class="grid grid-cols-3 gap-4 px-6 py-3">
+          <dt class="text-xs font-semibold uppercase tracking-wider text-gray-400">Stagiaire</dt>
+          <dd class="col-span-2 text-sm text-gray-800">
+            {{ convention.stagiairePrenom }} {{ convention.stagiaireNom }}
+          </dd>
+        </div>
+        <div class="grid grid-cols-3 gap-4 px-6 py-3">
+          <dt class="text-xs font-semibold uppercase tracking-wider text-gray-400">Email</dt>
+          <dd class="col-span-2 text-sm text-gray-800">{{ convention.stagiaireEmail }}</dd>
+        </div>
+        <div class="grid grid-cols-3 gap-4 px-6 py-3">
+          <dt class="text-xs font-semibold uppercase tracking-wider text-gray-400">Département</dt>
+          <dd class="col-span-2 text-sm text-gray-800">{{ convention.departement }}</dd>
+        </div>
+        <div class="grid grid-cols-3 gap-4 px-6 py-3">
+          <dt class="text-xs font-semibold uppercase tracking-wider text-gray-400">Période</dt>
+          <dd class="col-span-2 text-sm text-gray-800">
+            {{ convention.dateDebut | date:'dd/MM/yyyy' }} → {{ convention.dateFin | date:'dd/MM/yyyy' }}
+          </dd>
+        </div>
+        <div class="grid grid-cols-3 gap-4 px-6 py-3">
+          <dt class="text-xs font-semibold uppercase tracking-wider text-gray-400">Établie le</dt>
+          <dd class="col-span-2 text-sm text-gray-800">{{ convention.dateGeneration | date:'dd/MM/yyyy' }}</dd>
+        </div>
+      </dl>
+
+      <div class="border-t border-gray-100 bg-gray-50 px-6 py-4">
+        <button *ngIf="convention.pdfDisponible" type="button" (click)="telecharger()"
+                [disabled]="telechargementEnCours"
+                class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg hover:opacity-90 disabled:opacity-50">
+          <span class="material-icons text-lg">download</span>
+          {{ telechargementEnCours ? 'Téléchargement…' : 'Télécharger le PDF' }}
+        </button>
+
+        <p *ngIf="!convention.pdfDisponible" class="text-sm text-gray-500">
+          Le document PDF n'a pas encore été généré par l'administration. Vous pourrez le télécharger
+          ici dès qu'il sera disponible.
+        </p>
+      </div>
+    </section>
+  </ng-container>
+</div>

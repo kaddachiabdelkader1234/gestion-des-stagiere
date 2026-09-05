@@ -1,0 +1,92 @@
+# Gateway configuration.
+#
+# Routes are defined here (not only in Config Server) so the gateway is fully functional
+# when config-server is unavailable — bootstrap.yml sets fail-fast: false, so a missing
+# Config Server would otherwise leave the gateway running with zero routes.
+# Keep config-server/src/main/resources/config/api-gateway.yml in sync with this file.
+
+server:
+  port: 18080
+
+spring:
+  application:
+    name: api-gateway
+  codec:
+    max-in-memory-size: 10MB
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+  cloud:
+    gateway:
+      httpclient:
+        response-timeout: 60s
+        pool:
+          max-connections: 200
+      discovery:
+        locator:
+          enabled: false
+      routes:
+        # auth-service exposes /api/auth/** — rewrite the versioned public path onto it.
+        - id: auth-service
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/api/v1/auth/**
+          filters:
+            - RewritePath=/api/v1/auth/(?<segment>.*), /api/auth/${segment}
+        - id: stagiaire-service
+          uri: lb://STAGIAIRE-SERVICE
+          predicates:
+            - Path=/api/v1/stagiaires/**
+        # Candidatures are served by STAGIAIRE-SERVICE too (same bounded context), so they need
+        # their own predicate — Path=/api/v1/stagiaires/** does not match /api/v1/candidatures/**.
+        - id: candidature-service
+          uri: lb://STAGIAIRE-SERVICE
+          predicates:
+            - Path=/api/v1/candidatures/**
+        # Audit log — lives in STAGIAIRE-SERVICE as well.
+        - id: audit-service
+          uri: lb://STAGIAIRE-SERVICE
+          predicates:
+            - Path=/api/v1/audit/**
+        - id: convention-service
+          uri: lb://CONVENTION-SERVICE
+          predicates:
+            - Path=/api/v1/conventions/**
+        - id: evaluation-service
+          uri: lb://EVALUATION-SERVICE
+          predicates:
+            - Path=/api/v1/evaluations/**
+        - id: notification-service
+          uri: lb://NOTIFICATION-SERVICE
+          predicates:
+            - Path=/api/v1/notifications/**
+
+# CORS is handled by SecurityConfig#corsConfigurationSource (Spring Security runs first in the
+# reactive filter chain). Declaring globalcors here as well would duplicate the headers.
+gateway:
+  cors:
+    allowed-origins: ${GATEWAY_ALLOWED_ORIGINS:http://localhost:4200}
+
+# Shared HS256 secret — must match auth-service's JWT_SECRET and the .NET services' JWT_SECRET.
+# Deliberately has no default: HS256 needs a key of at least 32 bytes, so a placeholder fallback
+# would let the gateway start and then fail cryptically on the first request. Missing env var =
+# clear startup failure instead. Set it in .env (see .env.example).
+jwt:
+  secret: ${JWT_SECRET}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_DEFAULT_ZONE:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway,prometheus
+  endpoint:
+    health:
+      show-details: always

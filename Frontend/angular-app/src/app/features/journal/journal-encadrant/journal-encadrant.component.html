@@ -1,0 +1,162 @@
+<div class="space-y-8 animate-fade-in">
+  <section class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 to-purple-600 p-8 shadow-2xl">
+    <div class="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
+    <div class="relative z-10 flex items-center space-x-3 text-white">
+      <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+        <span class="material-icons text-white">rate_review</span>
+      </div>
+      <div>
+        <h1 class="text-3xl font-bold mb-1">Journaux de bord</h1>
+        <p class="text-white/80">Les comptes rendus hebdomadaires de vos stagiaires</p>
+      </div>
+    </div>
+  </section>
+
+  <div *ngIf="erreur" class="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4">
+    <span class="material-icons text-red-600">error_outline</span>
+    <p class="text-sm text-red-800">{{ erreur }}</p>
+  </div>
+
+  <div *ngIf="succes" class="flex items-start gap-3 rounded-2xl border border-green-200 bg-green-50 p-4">
+    <span class="material-icons text-green-600">check_circle_outline</span>
+    <p class="text-sm text-green-800">{{ succes }}</p>
+  </div>
+
+  <div *ngIf="chargement" class="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 text-center text-gray-500">
+    Chargement…
+  </div>
+
+  <ng-container *ngIf="!chargement">
+    <!-- No assigned stagiaires at all -->
+    <section *ngIf="stagiaires.length === 0"
+             class="bg-white rounded-2xl shadow-xl border border-gray-100 p-12 text-center">
+      <span class="material-icons text-5xl text-gray-300">supervisor_account</span>
+      <p class="mt-3 font-semibold text-gray-700">Aucun stagiaire ne vous est assigné.</p>
+      <p class="mt-1 text-sm text-gray-500">
+        L'administration vous assignera des stagiaires en acceptant leurs candidatures.
+      </p>
+    </section>
+
+    <ng-container *ngIf="stagiaires.length > 0">
+      <!-- Stagiaire picker + review filter -->
+      <section class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
+        <div class="flex flex-wrap items-end gap-6">
+          <div class="min-w-64 flex-1">
+            <label for="stagiaire" class="block text-xs font-semibold uppercase tracking-wider text-gray-400">
+              Stagiaire
+            </label>
+            <select id="stagiaire" [(ngModel)]="stagiaireId" (ngModelChange)="changerSelection()"
+                    class="mt-1 w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-gray-800 focus:border-indigo-400 focus:outline-none">
+              <option *ngFor="let stagiaire of stagiaires" [value]="stagiaire.id">
+                {{ nomComplet(stagiaire) }} — {{ stagiaire.departement }}
+              </option>
+            </select>
+          </div>
+
+          <label class="flex cursor-pointer items-center gap-2 pb-2.5 text-sm text-gray-600">
+            <input type="checkbox" [(ngModel)]="sansCommentaire" (ngModelChange)="changerSelection()"
+                   class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-400" />
+            À commenter uniquement
+          </label>
+        </div>
+      </section>
+
+      <!-- Entries -->
+      <section class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+        <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+          <h2 class="font-bold text-gray-800">Entrées</h2>
+          <span class="text-xs text-gray-500">{{ totalCount }} entrée(s)</span>
+        </div>
+
+        <div *ngIf="chargementEntrees" class="p-8 text-center text-gray-500">Chargement…</div>
+
+        <div *ngIf="!chargementEntrees && entrees.length === 0" class="p-12 text-center">
+          <span class="material-icons text-5xl text-gray-300">edit_note</span>
+          <p class="mt-3 font-semibold text-gray-700">
+            {{ sansCommentaire ? 'Tout est commenté.' : 'Ce journal est encore vide.' }}
+          </p>
+          <p class="mt-1 text-sm text-gray-500">
+            {{ sansCommentaire
+                ? 'Aucune entrée n\'attend votre retour pour ce stagiaire.'
+                : 'Le stagiaire n\'a pas encore rédigé d\'entrée hebdomadaire.' }}
+          </p>
+        </div>
+
+        <ul *ngIf="!chargementEntrees" class="divide-y divide-gray-100">
+          <li *ngFor="let entree of entrees" class="px-6 py-5">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <span class="material-icons text-gray-400">event_note</span>
+                <div>
+                  <p class="font-semibold text-gray-800">
+                    Semaine du {{ entree.dateEntree | date:'dd/MM/yyyy' }}
+                  </p>
+                  <p class="text-xs text-gray-500">
+                    Rédigée le {{ entree.dateCreation | date:'dd/MM/yyyy' }}
+                    <span *ngIf="entree.dateModification">
+                      · modifiée le {{ entree.dateModification | date:'dd/MM/yyyy' }}
+                    </span>
+                  </p>
+                </div>
+              </div>
+
+              <span class="px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap"
+                    [ngClass]="entree.estCommentee ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'">
+                {{ entree.estCommentee ? 'Commentée' : 'À commenter' }}
+              </span>
+            </div>
+
+            <p class="mt-3 whitespace-pre-line rounded-xl bg-gray-50 p-4 text-sm text-gray-700">
+              {{ entree.texte }}
+            </p>
+
+            <div class="mt-4">
+              <label [attr.for]="'commentaire-' + entree.id"
+                     class="block text-xs font-semibold uppercase tracking-wider text-gray-400">
+                {{ entree.estCommentee ? 'Votre retour' : 'Ajouter un retour' }}
+              </label>
+              <textarea [id]="'commentaire-' + entree.id" rows="3"
+                        [(ngModel)]="brouillons[entree.id]"
+                        [attr.maxlength]="limits.commentaireMax"
+                        placeholder="Votre retour sur cette semaine…"
+                        class="mt-1 w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-gray-800 focus:border-indigo-400 focus:outline-none"></textarea>
+
+              <div class="mt-2 flex flex-wrap items-center gap-3">
+                <button type="button" (click)="enregistrerCommentaire(entree)"
+                        [disabled]="!commentaireValide(entree.id) || enregistrementId === entree.id"
+                        class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-2 text-sm font-semibold text-white shadow-lg hover:opacity-90 disabled:opacity-50">
+                  <span class="material-icons text-lg">send</span>
+                  {{ enregistrementId === entree.id
+                      ? 'Enregistrement…'
+                      : (entree.estCommentee ? 'Mettre à jour le retour' : 'Enregistrer le retour') }}
+                </button>
+
+                <p *ngIf="entree.estCommentee && entree.dateCommentaire" class="text-xs text-gray-500">
+                  Dernier retour le {{ entree.dateCommentaire | date:'dd/MM/yyyy' }}
+                </p>
+
+                <!-- Explains why the stagiaire can no longer edit: commenting is what freezes it. -->
+                <p *ngIf="entree.estCommentee" class="text-xs text-gray-400">
+                  L'entrée est figée depuis votre commentaire.
+                </p>
+              </div>
+            </div>
+          </li>
+        </ul>
+
+        <div *ngIf="totalPages > 1"
+             class="flex items-center justify-between border-t border-gray-100 bg-gray-50 px-6 py-4">
+          <button type="button" (click)="allerPage(page - 1)" [disabled]="page <= 1"
+                  class="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-40">
+            Précédent
+          </button>
+          <span class="text-sm text-gray-500">Page {{ page }} sur {{ totalPages }}</span>
+          <button type="button" (click)="allerPage(page + 1)" [disabled]="page >= totalPages"
+                  class="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-40">
+            Suivant
+          </button>
+        </div>
+      </section>
+    </ng-container>
+  </ng-container>
+</div>

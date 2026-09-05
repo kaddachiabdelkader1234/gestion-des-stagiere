@@ -1,0 +1,64 @@
+spring:
+  application:
+    name: auth-service
+  
+  datasource:
+    # allowPublicKeyRetrieval=true: MySQL 8 uses caching_sha2_password, and since this URL turns
+    # SSL off the driver would otherwise refuse to fetch the server key ("Public Key Retrieval is
+    # not allowed"). Local-development default only — Docker Compose overrides this.
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/smartek_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    defer-datasource-initialization: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+  
+  sql:
+    init:
+      mode: always
+
+  cloud:
+    config:
+      enabled: false
+
+server:
+  port: 8081
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE:http://localhost:8761/eureka/}
+    fetch-registry: true
+    register-with-eureka: true
+    enabled: true
+  instance:
+    prefer-ip-address: true
+
+# JWT Configuration
+# Shared HS256 secret — the same value must reach the gateway and all four .NET services.
+# No default on purpose: jjwt rejects keys under 32 bytes, so a placeholder fallback would let
+# the service start and then throw on the first login. Set JWT_SECRET in .env (see .env.example).
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 86400000 # 24 hours in milliseconds
+
+# Admin seed — created on first boot if no ADMIN account exists.
+# The env vars come from docker-compose.yml, which reads ADMIN_EMAIL / ADMIN_PASSWORD from .env.
+admin:
+  email: ${ADMIN_EMAIL:}
+  password: ${ADMIN_PASSWORD:}
+  firstName: ${ADMIN_FIRST_NAME:Admin}
+
+# Logging
+logging:
+  level:
+    com.smartek: DEBUG
+    org.springframework.security: DEBUG

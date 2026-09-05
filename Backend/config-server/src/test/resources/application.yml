@@ -1,0 +1,17 @@
+spring:
+  profiles:
+    active: native
+  cloud:
+    discovery:
+      enabled: false
+    config:
+      enabled: false
+      server:
+        native:
+          search-locations: classpath:/config
+
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false

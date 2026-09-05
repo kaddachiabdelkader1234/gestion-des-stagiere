@@ -1,0 +1,34 @@
+# Java / Maven
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+
+# .NET
+**/bin/
+**/obj/
+*.user
+*.suo
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# Angular / Node
+**/node_modules/
+**/dist/
+**/.angular/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+*.env
+.env
+!.env.example

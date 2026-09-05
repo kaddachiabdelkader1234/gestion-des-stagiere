@@ -1,0 +1,35 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Spring Boot Actuator metrics.
+  # Note the gateway binds 18080, not 8080 — scraping 8080 silently collected nothing.
+  - job_name: 'spring-boot-services'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets:
+          - eureka-server:8761
+          - auth-service:8081
+          - config-server:8888
+          - api-gateway:18080
+
+  # .NET services.
+  # /metrics is not served yet — wiring an OpenTelemetry/prometheus-net exporter into each service
+  # is the observability phase. Until then this job is expected to report the targets as DOWN;
+  # /health and /health/ready already respond (see Smartek.Common HealthCheckExtensions).
+  - job_name: 'dotnet-services'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets:
+          - stagiaire-service:8080
+          - convention-service:8080
+          - evaluation-service:8080
+          - notification-service:8080
+
+  # RabbitMQ. Requires the rabbitmq_prometheus plugin, which the rabbitmq:3-management image
+  # enables by default on 15692.
+  - job_name: 'rabbitmq'
+    static_configs:
+      - targets:
+          - rabbitmq:15692

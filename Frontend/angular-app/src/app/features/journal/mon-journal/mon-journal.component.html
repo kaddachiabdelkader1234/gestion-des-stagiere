@@ -1,0 +1,208 @@
+<div class="space-y-8 animate-fade-in">
+  <section class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 to-purple-600 p-8 shadow-2xl">
+    <div class="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
+    <div class="relative z-10 flex items-center space-x-3 text-white">
+      <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+        <span class="material-icons text-white">menu_book</span>
+      </div>
+      <div>
+        <h1 class="text-3xl font-bold mb-1">Mon journal de bord</h1>
+        <p class="text-white/80">Vos comptes rendus hebdomadaires et les retours de votre encadrant</p>
+      </div>
+    </div>
+  </section>
+
+  <div *ngIf="erreur" class="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4">
+    <span class="material-icons text-red-600">error_outline</span>
+    <p class="text-sm text-red-800">{{ erreur }}</p>
+  </div>
+
+  <div *ngIf="succes" class="flex items-start gap-3 rounded-2xl border border-green-200 bg-green-50 p-4">
+    <span class="material-icons text-green-600">check_circle_outline</span>
+    <p class="text-sm text-green-800">{{ succes }}</p>
+  </div>
+
+  <div *ngIf="chargement" class="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 text-center text-gray-500">
+    Chargement…
+  </div>
+
+  <ng-container *ngIf="!chargement">
+    <!-- No candidature at all -->
+    <section *ngIf="aucuneCandidature" class="bg-white rounded-2xl shadow-xl border border-gray-100 p-12 text-center">
+      <span class="material-icons text-5xl text-gray-300">assignment_late</span>
+      <p class="mt-3 font-semibold text-gray-700">Vous n'avez pas encore de candidature.</p>
+      <p class="mt-1 text-sm text-gray-500">
+        Déposez d'abord votre demande de stage depuis « Ma candidature ».
+      </p>
+      <a routerLink="/dashboard/ma-candidature"
+         class="mt-5 inline-block rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg hover:opacity-90">
+        Aller à ma candidature
+      </a>
+    </section>
+
+    <!-- Candidature still pending -->
+    <section *ngIf="candidature && candidature.statut === 'EnAttente'"
+             class="bg-white rounded-2xl shadow-xl border border-gray-100 p-12 text-center">
+      <span class="material-icons text-5xl text-yellow-400">hourglass_empty</span>
+      <p class="mt-3 font-semibold text-gray-700">Votre candidature est en cours d'examen.</p>
+      <p class="mt-1 text-sm text-gray-500">
+        Le journal de bord s'ouvrira dès que votre candidature sera acceptée.
+      </p>
+    </section>
+
+    <!-- Candidature rejected -->
+    <section *ngIf="candidature && candidature.statut === 'Rejetee'"
+             class="bg-white rounded-2xl shadow-xl border border-gray-100 p-12 text-center">
+      <span class="material-icons text-5xl text-red-300">block</span>
+      <p class="mt-3 font-semibold text-gray-700">Votre candidature n'a pas été retenue.</p>
+      <p *ngIf="candidature.motifRejet" class="mt-2 text-sm text-gray-500">
+        Motif : {{ candidature.motifRejet }}
+      </p>
+      <p class="mt-1 text-sm text-gray-500">Aucun journal de bord n'est ouvert dans ce cas.</p>
+    </section>
+
+    <ng-container *ngIf="journalOuvert">
+      <!-- Entry form: composes a new entry, or edits an uncommented one -->
+      <section class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+        <div class="border-b border-gray-100 px-6 py-4">
+          <h2 class="font-bold text-gray-800">
+            {{ editionId ? 'Modifier une entrée' : 'Nouvelle entrée' }}
+          </h2>
+          <p class="text-xs text-gray-500">
+            Une seule entrée par semaine. Vous pouvez la corriger jusqu'au premier commentaire de
+            votre encadrant.
+          </p>
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="enregistrer()" class="space-y-5 px-6 py-5">
+          <div>
+            <label for="dateEntree" class="block text-xs font-semibold uppercase tracking-wider text-gray-400">
+              Semaine concernée
+            </label>
+            <input id="dateEntree" type="date" formControlName="dateEntree" [max]="dateMax"
+                   class="mt-1 w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-gray-800 focus:border-indigo-400 focus:outline-none" />
+            <p *ngIf="form.controls['dateEntree'].touched && form.controls['dateEntree'].invalid"
+               class="mt-1 text-xs text-red-600">
+              La date de l'entrée est obligatoire.
+            </p>
+          </div>
+
+          <div>
+            <label for="texte" class="block text-xs font-semibold uppercase tracking-wider text-gray-400">
+              Compte rendu
+            </label>
+            <textarea id="texte" formControlName="texte" rows="6"
+                      [attr.maxlength]="limits.texteMax"
+                      placeholder="Ce que vous avez fait cette semaine, ce que vous avez appris, les difficultés rencontrées…"
+                      class="mt-1 w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-gray-800 focus:border-indigo-400 focus:outline-none"></textarea>
+            <div class="mt-1 flex items-start justify-between gap-4">
+              <p *ngIf="form.controls['texte'].touched && form.controls['texte'].invalid"
+                 class="text-xs text-red-600">
+                Le compte rendu doit comporter entre {{ limits.texteMin }} et
+                {{ limits.texteMax }} caractères.
+              </p>
+              <p class="ml-auto shrink-0 text-xs text-gray-400">
+                {{ (form.value.texte || '').length }} / {{ limits.texteMax }}
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <button type="submit" [disabled]="enregistrement"
+                    class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg hover:opacity-90 disabled:opacity-50">
+              <span class="material-icons text-lg">{{ editionId ? 'save' : 'add' }}</span>
+              {{ enregistrement ? 'Enregistrement…' : (editionId ? 'Enregistrer' : 'Ajouter l\'entrée') }}
+            </button>
+
+            <button *ngIf="editionId" type="button" (click)="annulerEdition()"
+                    class="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50">
+              Annuler
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Entries -->
+      <section class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+        <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+          <h2 class="font-bold text-gray-800">Mes entrées</h2>
+          <span class="text-xs text-gray-500">{{ totalCount }} entrée(s)</span>
+        </div>
+
+        <div *ngIf="entrees.length === 0" class="p-12 text-center">
+          <span class="material-icons text-5xl text-gray-300">edit_note</span>
+          <p class="mt-3 font-semibold text-gray-700">Votre journal est encore vide.</p>
+          <p class="mt-1 text-sm text-gray-500">
+            Ajoutez votre première entrée hebdomadaire avec le formulaire ci-dessus.
+          </p>
+        </div>
+
+        <ul class="divide-y divide-gray-100">
+          <li *ngFor="let entree of entrees" class="px-6 py-5">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <span class="material-icons text-gray-400">event_note</span>
+                <div>
+                  <p class="font-semibold text-gray-800">
+                    Semaine du {{ entree.dateEntree | date:'dd/MM/yyyy' }}
+                  </p>
+                  <p class="text-xs text-gray-500">
+                    Rédigée le {{ entree.dateCreation | date:'dd/MM/yyyy' }}
+                    <span *ngIf="entree.dateModification">
+                      · modifiée le {{ entree.dateModification | date:'dd/MM/yyyy' }}
+                    </span>
+                  </p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <span class="px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap"
+                      [ngClass]="entree.estCommentee ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'">
+                  {{ entree.estCommentee ? 'Commentée' : 'En attente de retour' }}
+                </span>
+
+                <!-- Hidden once commented: the server answers 409, so offering it would only fail. -->
+                <button *ngIf="entree.modifiable" type="button" (click)="modifier(entree)"
+                        class="inline-flex items-center gap-1 rounded-xl border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50">
+                  <span class="material-icons text-sm">edit</span>
+                  Modifier
+                </button>
+              </div>
+            </div>
+
+            <p class="mt-3 whitespace-pre-line text-sm text-gray-700">{{ entree.texte }}</p>
+
+            <div *ngIf="entree.commentaireEncadrant"
+                 class="mt-4 rounded-xl border border-indigo-100 bg-indigo-50 p-4">
+              <div class="flex items-center gap-2">
+                <span class="material-icons text-sm text-indigo-600">rate_review</span>
+                <p class="text-xs font-semibold uppercase tracking-wider text-indigo-700">
+                  Retour de l'encadrant
+                </p>
+                <span *ngIf="entree.dateCommentaire" class="ml-auto text-xs text-indigo-500">
+                  {{ entree.dateCommentaire | date:'dd/MM/yyyy' }}
+                </span>
+              </div>
+              <p class="mt-2 whitespace-pre-line text-sm text-indigo-900">
+                {{ entree.commentaireEncadrant }}
+              </p>
+            </div>
+          </li>
+        </ul>
+
+        <div *ngIf="totalPages > 1"
+             class="flex items-center justify-between border-t border-gray-100 bg-gray-50 px-6 py-4">
+          <button type="button" (click)="allerPage(page - 1)" [disabled]="page <= 1"
+                  class="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-40">
+            Précédent
+          </button>
+          <span class="text-sm text-gray-500">Page {{ page }} sur {{ totalPages }}</span>
+          <button type="button" (click)="allerPage(page + 1)" [disabled]="page >= totalPages"
+                  class="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-40">
+            Suivant
+          </button>
+        </div>
+      </section>
+    </ng-container>
+  </ng-container>
+</div>

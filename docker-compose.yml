@@ -1,0 +1,306 @@
+services:
+  # ========== INFRASTRUCTURE ==========
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: smartek-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - smartek-network
+
+  mysql:
+    image: mysql:8.0
+    container_name: smartek-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: smartek_db
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - smartek-network
+
+  postgres:
+    image: postgres:15
+    container_name: smartek-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - smartek-network
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: smartek-mailhog
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI
+    networks:
+      - smartek-network
+
+  # ========== JAVA SERVICES ==========
+  eureka-server:
+    build:
+      context: ./Backend/eureka-server
+      dockerfile: Dockerfile
+    container_name: smartek-eureka
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    networks:
+      - smartek-network
+
+  auth-service:
+    build:
+      context: ./Backend/auth-service
+      dockerfile: Dockerfile
+    container_name: smartek-auth
+    ports:
+      - "8081:8081"
+    environment:
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      # allowPublicKeyRetrieval=true is required: MySQL 8 defaults to caching_sha2_password, and
+      # with useSSL=false the driver otherwise refuses to fetch the server's public key and fails
+      # with "Public Key Retrieval is not allowed". Fine over the local compose network; for a real
+      # deployment use TLS to MySQL instead of disabling it.
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/smartek_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required - copy .env.example to .env}
+      # Admin seed: created on first boot if no ADMIN exists yet. Safe to restart — no duplicates.
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@stb.tn}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin123!}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    networks:
+      - smartek-network
+
+  config-server:
+    build:
+      context: ./Backend/config-server
+      dockerfile: Dockerfile
+    container_name: smartek-config
+    ports:
+      - "8888:8888"
+    environment:
+      EUREKA_DEFAULT_ZONE: http://eureka-server:8761/eureka/
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - smartek-network
+
+  api-gateway:
+    build:
+      context: ./Backend/api-gateway
+      dockerfile: Dockerfile
+    container_name: smartek-gateway
+    ports:
+      - "18080:18080"
+    environment:
+      EUREKA_DEFAULT_ZONE: http://eureka-server:8761/eureka/
+      CONFIG_SERVER_URL: http://config-server:8888
+      GATEWAY_ALLOWED_ORIGINS: ${GATEWAY_ALLOWED_ORIGINS:-http://localhost:4200}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required - copy .env.example to .env}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    networks:
+      - smartek-network
+
+  # ========== .NET SERVICES ==========
+  stagiaire-service:
+    build:
+      context: .
+      dockerfile: Stagiaire.Service/Dockerfile
+    container_name: smartek-stagiaire
+    ports:
+      - "5070:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      Eureka__Client__ServiceUrl: http://eureka-server:8761/eureka/
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=stagiaire_service_db;Username=postgres;Password=postgres;Maximum Pool Size=20;Minimum Pool Size=5;Connection Idle Lifetime=300
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__Username: guest
+      RabbitMQ__Password: guest
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required - copy .env.example to .env}
+      # Uploaded CVs live on the named volume below, not in the database, and not inside the
+      # container filesystem — otherwise every rebuild would discard them.
+      Storage__RootPath: /app/storage
+    volumes:
+      - stagiaire-storage:/app/storage
+    healthcheck:
+      # /health/live checks the process only — a database blip must not make the orchestrator
+      # kill a container that is otherwise fine. /health/ready is the one that includes the DB.
+      # start_period covers first boot, when the service is applying migrations.
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health/live || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - smartek-network
+
+  convention-service:
+    build:
+      context: .
+      dockerfile: Convention.Service/Dockerfile
+    container_name: smartek-convention
+    ports:
+      - "5071:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      Eureka__Client__ServiceUrl: http://eureka-server:8761/eureka/
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=convention_service_db;Username=postgres;Password=postgres;Maximum Pool Size=20;Minimum Pool Size=5;Connection Idle Lifetime=300
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__Username: guest
+      RabbitMQ__Password: guest
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required - copy .env.example to .env}
+      # Generated convention PDFs live on the named volume below, not in the database, and not
+      # inside the container filesystem — otherwise every rebuild would discard them.
+      Storage__RootPath: /app/storage
+    volumes:
+      - convention-storage:/app/storage
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health/live || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - smartek-network
+
+  evaluation-service:
+    build:
+      context: .
+      dockerfile: Evaluation.Service/Dockerfile
+    container_name: smartek-evaluation
+    ports:
+      - "5072:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      Eureka__Client__ServiceUrl: http://eureka-server:8761/eureka/
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=evaluation_service_db;Username=postgres;Password=postgres;Maximum Pool Size=20;Minimum Pool Size=5;Connection Idle Lifetime=300
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__Username: guest
+      RabbitMQ__Password: guest
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required - copy .env.example to .env}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health/live || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - smartek-network
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: Notification.Service/Dockerfile
+    container_name: smartek-notification
+    ports:
+      - "5073:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      Eureka__Client__ServiceUrl: http://eureka-server:8761/eureka/
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=notification_service_db;Username=postgres;Password=postgres;Maximum Pool Size=20;Minimum Pool Size=5;Connection Idle Lifetime=300
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__Username: guest
+      RabbitMQ__Password: guest
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required - copy .env.example to .env}
+      # SMTP — reads from .env. Defaults point at Mailhog for local dev;
+      # to use real Gmail, set SMTP_HOST / SMTP_USERNAME / SMTP_PASSWORD in .env
+      # and restart the notification-service container.
+      Smtp__Host: mailhog
+      Smtp__Port: 1025
+      Smtp__Username: ""
+      Smtp__Password: ""
+      Smtp__EnableSsl: "false"
+      Smtp__FromAddress: ${SMTP_FROM_ADDRESS:-noreply@stb.tn}
+      Smtp__FromName: ${SMTP_FROM_NAME:-STB Gestion des Stagiaires}
+      Smtp__NoOp: "false"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health/live || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      mailhog:
+        condition: service_started
+    networks:
+      - smartek-network
+
+networks:
+  smartek-network:
+    driver: bridge
+
+volumes:
+  # Uploaded CVs (and later, generated PDFs). A named volume so files survive
+  # `docker compose up --build` and container recreation.
+  stagiaire-storage:
+
+  # Generated convention PDFs — a separate volume so one storage scope cannot leak into another.
+  convention-storage:

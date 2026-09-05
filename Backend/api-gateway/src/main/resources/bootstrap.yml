@@ -1,0 +1,15 @@
+# Bootstrap configuration for api-gateway
+# This is loaded before application.yml
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    config:
+      uri: ${CONFIG_SERVER_URL:http://localhost:8888}
+      fail-fast: false
+      retry:
+        initial-interval: 1000
+        max-attempts: 6
+        max-interval: 2000
+        multiplier: 1.1
