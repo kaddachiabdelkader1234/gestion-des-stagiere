@@ -1,0 +1,117 @@
+name: CI - Build & Test
+
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ========== JAVA SERVICES ==========
+  java-services:
+    name: Java Services (Maven)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [eureka-server, auth-service, api-gateway]
+    defaults:
+      run:
+        working-directory: Backend/${{ matrix.service }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          cache: maven
+
+      - name: Build & Test
+        run: mvn clean verify -B
+
+  # ========== .NET SERVICES ==========
+  dotnet-services:
+    name: .NET Services
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - Stagiaire.Service
+          - Convention.Service
+          - Evaluation.Service
+          - Notification.Service
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore dependencies
+        run: dotnet restore ${{ matrix.service }}/${{ matrix.service }}.csproj
+
+      - name: Build
+        run: dotnet build ${{ matrix.service }}/${{ matrix.service }}.csproj --no-restore -c Release
+
+      - name: Run tests
+        run: dotnet test ${{ matrix.service }}/${{ matrix.service }}.csproj --no-build -c Release --verbosity normal
+        env:
+          JWT_SECRET: ci-test-secret-at-least-32-bytes-long-for-hs256
+
+  # Since Docker build fails due to repo name casing, skip Docker push in CI
+  # Docker images can be built locally with docker-compose.yml
+
+  # ========== .NET INTEGRATION TESTS ==========
+  dotnet-integration-tests:
+    name: .NET Integration Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore & Build
+        run: |
+          dotnet restore Stagiaire.Service.Tests/Stagiaire.Service.Tests.csproj
+          dotnet build Stagiaire.Service.Tests/Stagiaire.Service.Tests.csproj -c Release
+
+      - name: Run unit tests (skip integration tests — they need the full Docker stack)
+        run: dotnet test Stagiaire.Service.Tests/Stagiaire.Service.Tests.csproj -c Release --verbosity normal --filter "Category!=Integration"
+        env:
+          JWT_SECRET: ci-test-secret-at-least-32-bytes-long-for-hs256
+
+  # ========== ANGULAR FRONTEND ==========
+  angular-frontend:
+    name: Angular Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Frontend/angular-app
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: Frontend/angular-app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build -- --configuration production

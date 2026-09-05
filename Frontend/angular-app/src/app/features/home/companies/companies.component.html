@@ -1,0 +1,8 @@
+<section class="bg-white py-12">
+  <div class="container">
+    <h2 class="text-center text-3xl font-bold mb-12">Trusted by leading companies</h2>
+    <div class="flex flex-wrap justify-center items-center gap-12">
+      <img *ngFor="let company of companies" [src]="company.imgSrc" alt="Company logo" class="h-12 grayscale hover:grayscale-0 transition duration-300" />
+    </div>
+  </div>
+</section>

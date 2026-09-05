@@ -1,0 +1,141 @@
+<header [class]="'fixed top-0 z-40 w-full transition-all duration-300 ' + (sticky ? 'shadow-lg bg-white py-3' : 'shadow-none bg-white/95 backdrop-blur-sm py-4')">
+  <div class="container mx-auto max-w-7xl px-4 flex items-center justify-between">
+    <!-- Logo STB -->
+    <a href="/" class="flex items-center gap-3">
+      <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-md">
+        <span class="text-white font-bold text-lg">S</span>
+      </div>
+      <div>
+        <span class="text-xl font-bold text-primary tracking-tight">STB</span>
+        <span class="text-xs text-gray-400 block -mt-1 font-medium">Gestion des Stagiaires</span>
+      </div>
+    </a>
+
+    <!-- Desktop Navigation -->
+    <nav class="hidden lg:flex grow items-center gap-8 justify-start ml-14">
+      <a *ngFor="let item of headerData" [href]="item.href" class="text-base font-medium text-gray-600 hover:text-primary transition duration-300 relative group">
+        {{ item.label }}
+        <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-primary to-accent transition-all duration-300 group-hover:w-full"></span>
+      </a>
+    </nav>
+
+    <!-- Desktop Buttons / User Menu -->
+    <div class="flex items-center gap-4">
+      <!-- Boutons Connexion/Inscription (si non connecté) -->
+      <ng-container *ngIf="!isAuthenticated()">
+        <button (click)="openSignIn()" class="hidden lg:block bg-transparent text-primary border-2 border-primary/20 hover:border-primary hover:bg-primary hover:text-white duration-300 px-6 py-2.5 rounded-xl font-semibold hover:cursor-pointer hover:shadow-lg">
+          Connexion
+        </button>
+        <button (click)="openSignUp()" class="hidden lg:block bg-gradient-to-r from-accent to-accent-dark text-white font-semibold hover:shadow-xl duration-300 px-6 py-2.5 rounded-xl hover:cursor-pointer transform hover:scale-105">
+          Inscription
+        </button>
+      </ng-container>
+
+      <!-- Menu utilisateur (si connecté) -->
+      <div *ngIf="isAuthenticated()" class="hidden lg:block relative user-menu-container">
+        <button (click)="toggleUserMenu()" class="flex items-center gap-2 hover:opacity-80 transition">
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-light flex items-center justify-center text-white font-semibold shadow-lg ring-2 ring-white overflow-hidden">
+            <img *ngIf="getUserImage()" [src]="getUserImage()" alt="User avatar" class="w-full h-full object-cover">
+            <span *ngIf="!getUserImage()">{{ getUserInitial() }}</span>
+          </div>
+        </button>
+
+        <!-- Dropdown Menu -->
+        <div *ngIf="userMenuOpen" class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-50 animate-fade-in-down">
+          <div class="px-4 py-3 border-b border-gray-100">
+            <p class="text-sm font-semibold text-gray-900">{{ currentUser?.firstName }}</p>
+            <p class="text-xs text-gray-500 truncate">{{ currentUser?.email }}</p>
+          </div>
+          
+          <button (click)="goToDashboard()" class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition">
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+            </svg>
+            Tableau de bord
+          </button>
+          
+          <div class="border-t border-gray-100 mt-2"></div>
+          
+          <button (click)="logout()" class="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+            Déconnexion
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Menu Toggle -->
+      <button (click)="toggleNavbar()" class="block lg:hidden p-2 rounded-lg hover:bg-gray-100" aria-label="Toggle mobile menu">
+        <span class="block w-6 h-0.5 bg-text transition-all" [class.rotate-45]="navbarOpen" [class.translate-y-2]="navbarOpen"></span>
+        <span class="block w-6 h-0.5 bg-text mt-1.5 transition-all" [class.opacity-0]="navbarOpen"></span>
+        <span class="block w-6 h-0.5 bg-text mt-1.5 transition-all" [class.-rotate-45]="navbarOpen" [class.-translate-y-2]="navbarOpen"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile Menu Overlay -->
+  <div *ngIf="navbarOpen" class="fixed top-0 left-0 w-full h-full bg-black/50 z-40" (click)="toggleNavbar()"></div>
+
+  <!-- Mobile Menu -->
+  <div [class]="'lg:hidden fixed top-0 right-0 h-full w-full bg-white shadow-2xl transform transition-transform duration-300 max-w-xs z-50 ' + (navbarOpen ? 'translate-x-0' : 'translate-x-full')">
+    <div class="flex items-center justify-between p-6 border-b">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+          <span class="text-white font-bold text-sm">S</span>
+        </div>
+        <span class="text-xl font-bold text-primary">STB</span>
+      </div>
+      <button (click)="toggleNavbar()" class="bg-gray-100 rounded-full p-2 text-text hover:bg-gray-200" aria-label="Close menu">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+    <nav class="flex flex-col items-start p-6 space-y-4">
+      <a *ngFor="let item of headerData" [href]="item.href" class="text-base font-medium text-gray-600 hover:text-primary py-2 w-full transition duration-300">
+        {{ item.label }}
+      </a>
+      
+      <!-- Si non connecté -->
+      <div *ngIf="!isAuthenticated()" class="mt-6 flex flex-col gap-4 w-full pt-4 border-t">
+        <button (click)="openSignIn()" class="bg-transparent text-primary border-2 border-primary/20 px-6 py-3 rounded-xl font-semibold hover:bg-primary hover:text-white transition duration-300">
+          Connexion
+        </button>
+        <button (click)="openSignUp()" class="bg-gradient-to-r from-accent to-accent-dark text-white px-6 py-3 rounded-xl font-semibold hover:shadow-xl transition duration-300">
+          Inscription
+        </button>
+      </div>
+
+      <!-- Si connecté -->
+      <div *ngIf="isAuthenticated()" class="mt-6 w-full pt-4 border-t">
+        <div class="flex items-center gap-3 mb-4 p-3 bg-gray-50 rounded-lg">
+          <div class="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary-light flex items-center justify-center text-white font-semibold shadow-lg overflow-hidden">
+            <img *ngIf="getUserImage()" [src]="getUserImage()" alt="User avatar" class="w-full h-full object-cover">
+            <span *ngIf="!getUserImage()">{{ getUserInitial() }}</span>
+          </div>
+          <div>
+            <p class="text-sm font-semibold text-gray-900">{{ currentUser?.firstName }}</p>
+            <p class="text-xs text-gray-500 truncate">{{ currentUser?.email }}</p>
+          </div>
+        </div>
+        
+        <div class="flex flex-col gap-2">
+          <button (click)="goToDashboard()" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-lg flex items-center gap-3 transition">
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+            </svg>
+            Tableau de bord
+          </button>
+          
+          <button (click)="logout()" class="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-lg flex items-center gap-3 transition mt-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+            Déconnexion
+          </button>
+        </div>
+      </div>
+    </nav>
+  </div>
+</header>

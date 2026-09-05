@@ -1,0 +1,20 @@
+<section id="testimonial-section" class="bg-white py-16">
+  <div class="container">
+    <h2 class="text-center mb-4">What our students say</h2>
+    <p class="text-center text-gray-600 mb-12">Hear from our successful students</p>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div *ngFor="let testimonial of testimonials" class="bg-gray-50 rounded-lg p-6 shadow-lg hover:shadow-xl transition duration-300">
+        <div class="flex items-center mb-4">
+          <img [src]="testimonial.imgSrc" [alt]="testimonial.name" class="w-16 h-16 rounded-full mr-4" />
+          <div>
+            <h4 class="font-bold">{{ testimonial.name }}</h4>
+            <p class="text-sm text-gray-600">{{ testimonial.profession }}</p>
+          </div>
+        </div>
+        <img [src]="testimonial.starimg" alt="Rating" class="mb-4 h-5" />
+        <p class="text-gray-700">{{ testimonial.detail }}</p>
+      </div>
+    </div>
+  </div>
+</section>

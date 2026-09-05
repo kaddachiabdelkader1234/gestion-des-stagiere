@@ -1,0 +1,143 @@
+<div class="space-y-8 animate-fade-in">
+  <!-- Header -->
+  <section class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 to-purple-600 p-8 shadow-2xl">
+    <div class="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
+    <div class="relative z-10 flex items-center space-x-3 text-white">
+      <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+        <span class="material-icons text-white">grading</span>
+      </div>
+      <div>
+        <h1 class="text-3xl font-bold mb-1">Mon évaluation</h1>
+        <p class="text-white/80">Le résultat de votre évaluation de fin de stage</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Alerts -->
+  <div *ngIf="erreur" class="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4">
+    <span class="material-icons text-red-600">error_outline</span>
+    <p class="text-sm text-red-800">{{ erreur }}</p>
+  </div>
+
+  <div *ngIf="chargement" class="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 text-center text-gray-500">
+    Chargement…
+  </div>
+
+  <ng-container *ngIf="!chargement">
+    <!-- No candidature at all -->
+    <section *ngIf="aucuneCandidature" class="bg-white rounded-2xl shadow-xl border border-gray-100 p-12 text-center">
+      <span class="material-icons text-5xl text-gray-300">assignment_late</span>
+      <p class="mt-3 font-semibold text-gray-700">Vous n'avez pas encore de candidature.</p>
+      <p class="mt-1 text-sm text-gray-500">
+        Déposez d'abord votre demande de stage depuis « Ma candidature ».
+      </p>
+      <a routerLink="/dashboard/ma-candidature"
+         class="mt-5 inline-block rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg hover:opacity-90">
+        Aller à ma candidature
+      </a>
+    </section>
+
+    <!-- Candidature still pending -->
+    <section *ngIf="candidature && candidature.statut === 'EnAttente'"
+             class="bg-white rounded-2xl shadow-xl border border-gray-100 p-12 text-center">
+      <span class="material-icons text-5xl text-yellow-400">hourglass_empty</span>
+      <p class="mt-3 font-semibold text-gray-700">Votre candidature est en cours d'examen.</p>
+      <p class="mt-1 text-sm text-gray-500">
+        L'évaluation sera disponible une fois votre stage terminé.
+      </p>
+    </section>
+
+    <!-- Candidature rejected -->
+    <section *ngIf="candidature && candidature.statut === 'Rejetee'"
+             class="bg-white rounded-2xl shadow-xl border border-gray-100 p-12 text-center">
+      <span class="material-icons text-5xl text-red-300">block</span>
+      <p class="mt-3 font-semibold text-gray-700">Votre candidature n'a pas été retenue.</p>
+      <p *ngIf="candidature.motifRejet" class="mt-2 text-sm text-gray-500">
+        Motif : {{ candidature.motifRejet }}
+      </p>
+    </section>
+
+    <ng-container *ngIf="stageActif">
+      <!-- Average score card -->
+      <section *ngIf="noteMoyenne !== null"
+               class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
+        <div class="flex items-center gap-4">
+          <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+            <span class="text-2xl font-bold text-white">{{ noteMoyenne }}</span>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">Note moyenne</p>
+            <p class="text-lg font-bold text-gray-800">sur 20</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Evaluations list -->
+      <section class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+        <div class="border-b border-gray-100 px-6 py-4">
+          <h2 class="font-bold text-gray-800">Mes évaluations</h2>
+          <span class="text-xs text-gray-500">{{ evaluations.length }} évaluation(s)</span>
+        </div>
+
+        <div *ngIf="evaluations.length === 0" class="p-12 text-center">
+          <span class="material-icons text-5xl text-gray-300">hourglass_top</span>
+          <p class="mt-3 font-semibold text-gray-700">Aucune évaluation pour le moment.</p>
+          <p class="mt-1 text-sm text-gray-500">
+            Votre encadrant saisira l'évaluation une fois votre stage suffisamment avancé.
+          </p>
+        </div>
+
+        <ul *ngIf="evaluations.length > 0" class="divide-y divide-gray-100">
+          <li *ngFor="let evalObj of evaluations" class="px-6 py-5">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <span class="material-icons text-gray-400">star</span>
+                <div>
+                  <p class="font-semibold text-gray-800">
+                    Évaluation {{ typeLabels[evalObj.typeEvaluation] }}
+                  </p>
+                  <p class="text-xs text-gray-500">
+                    {{ evalObj.dateEvaluation | date:'dd/MM/yyyy' }}
+                  </p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <!-- Note badge — only visible once validated -->
+                <span *ngIf="evalObj.statut === 'Validee'"
+                      class="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-3 py-1 text-sm font-bold text-indigo-800">
+                  {{ formatNote(evalObj.note) }}
+                </span>
+
+                <!-- Status badge -->
+                <span class="px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap"
+                      [ngClass]="statutBadge[evalObj.statut]">
+                  {{ statutLabels[evalObj.statut] }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Comment: visible to the stagiaire only once validated, to avoid premature disclosure -->
+            <div *ngIf="evalObj.statut === 'Validee' && evalObj.commentaire"
+                 class="mt-4 rounded-xl border border-indigo-100 bg-indigo-50 p-4">
+              <div class="flex items-center gap-2">
+                <span class="material-icons text-sm text-indigo-600">rate_review</span>
+                <p class="text-xs font-semibold uppercase tracking-wider text-indigo-700">
+                  Appréciation de l'encadrant
+                </p>
+              </div>
+              <p class="mt-2 whitespace-pre-line text-sm text-indigo-900">
+                {{ evalObj.commentaire }}
+              </p>
+            </div>
+
+            <!-- Placeholder when not yet validated -->
+            <p *ngIf="evalObj.statut !== 'Validee'" class="mt-3 text-sm text-gray-500 italic">
+              L'appréciation sera visible après validation par l'administration.
+            </p>
+          </li>
+        </ul>
+      </section>
+    </ng-container>
+  </ng-container>
+</div>

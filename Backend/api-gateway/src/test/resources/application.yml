@@ -1,0 +1,38 @@
+# Test configuration for api-gateway
+# Overrides main application.yml and Config Server config during tests
+
+spring:
+  cloud:
+    config:
+      enabled: false
+      import-check:
+        enabled: false
+    discovery:
+      enabled: false
+    gateway:
+      discovery:
+        locator:
+          enabled: false
+
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+server:
+  port: 0
+
+gateway:
+  cors:
+    allowed-origins: http://localhost:4200
+
+# Fixed test secret. HS256 via Nimbus requires a key of at least 256 bits (32 bytes).
+jwt:
+  secret: test-secret-key-for-gateway-tests-at-least-32-bytes-long

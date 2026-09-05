@@ -1,0 +1,42 @@
+<section id="Courses" class="bg-gray-50 py-16">
+  <div class="container">
+    <h2 class="text-center mb-4">Explore our popular courses</h2>
+    <p class="text-center text-gray-600 mb-12">Build skills with our courses and mentor from world-class companies.</p>
+
+    <!-- Category Filter -->
+    <div class="flex justify-center gap-4 mb-12 flex-wrap">
+      <button (click)="filterCourses('all')" [class]="'px-6 py-2 rounded-lg transition duration-300 ' + (selectedCategory === 'all' ? 'bg-primary text-white' : 'bg-white text-gray-700 hover:bg-gray-100')">
+        All Courses
+      </button>
+      <button (click)="filterCourses('webdevelopment')" [class]="'px-6 py-2 rounded-lg transition duration-300 ' + (selectedCategory === 'webdevelopment' ? 'bg-primary text-white' : 'bg-white text-gray-700 hover:bg-gray-100')">
+        Web Development
+      </button>
+      <button (click)="filterCourses('mobiledevelopment')" [class]="'px-6 py-2 rounded-lg transition duration-300 ' + (selectedCategory === 'mobiledevelopment' ? 'bg-primary text-white' : 'bg-white text-gray-700 hover:bg-gray-100')">
+        Mobile Development
+      </button>
+      <button (click)="filterCourses('datascience')" [class]="'px-6 py-2 rounded-lg transition duration-300 ' + (selectedCategory === 'datascience' ? 'bg-primary text-white' : 'bg-white text-gray-700 hover:bg-gray-100')">
+        Data Science
+      </button>
+      <button (click)="filterCourses('cloudcomputing')" [class]="'px-6 py-2 rounded-lg transition duration-300 ' + (selectedCategory === 'cloudcomputing' ? 'bg-primary text-white' : 'bg-white text-gray-700 hover:bg-gray-100')">
+        Cloud Computing
+      </button>
+    </div>
+
+    <!-- Courses Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div *ngFor="let course of filteredCourses" class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300">
+        <img [src]="course.imageSrc" [alt]="course.course" class="w-full h-48 object-cover" />
+        <div class="p-6">
+          <h3 class="text-xl font-bold mb-2">{{ course.course }}</h3>
+          <p class="text-gray-600 mb-4">{{ course.profession }}</p>
+          <div class="flex justify-between items-center">
+            <span class="text-2xl font-bold text-primary">${{ course.price }}</span>
+            <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-transparent hover:text-primary border border-primary transition duration-300">
+              Enroll
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

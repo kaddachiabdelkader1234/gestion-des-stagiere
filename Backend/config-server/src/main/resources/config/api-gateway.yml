@@ -1,0 +1,65 @@
+# Centralized configuration for api-gateway
+# This file is served by Config Server at /api-gateway/default
+#
+# NOTE: api-gateway/src/main/resources/application.yml carries the same routes so the gateway
+# works when Config Server is down (bootstrap.yml uses fail-fast: false). Keep both in sync.
+
+server:
+  port: 18080
+
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: false
+      routes:
+        - id: auth-service
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/api/v1/auth/**
+          filters:
+            - RewritePath=/api/v1/auth/(?<segment>.*), /api/auth/${segment}
+        - id: stagiaire-service
+          uri: lb://STAGIAIRE-SERVICE
+          predicates:
+            - Path=/api/v1/stagiaires/**
+        # Candidatures live in STAGIAIRE-SERVICE as well; they need their own predicate.
+        - id: candidature-service
+          uri: lb://STAGIAIRE-SERVICE
+          predicates:
+            - Path=/api/v1/candidatures/**
+        # Audit log — lives in STAGIAIRE-SERVICE as well.
+        - id: audit-service
+          uri: lb://STAGIAIRE-SERVICE
+          predicates:
+            - Path=/api/v1/audit/**
+        - id: convention-service
+          uri: lb://CONVENTION-SERVICE
+          predicates:
+            - Path=/api/v1/conventions/**
+        - id: evaluation-service
+          uri: lb://EVALUATION-SERVICE
+          predicates:
+            - Path=/api/v1/evaluations/**
+        - id: notification-service
+          uri: lb://NOTIFICATION-SERVICE
+          predicates:
+            - Path=/api/v1/notifications/**
+
+gateway:
+  cors:
+    allowed-origins: ${GATEWAY_ALLOWED_ORIGINS:http://localhost:4200}
+
+# Shared HS256 secret — no default on purpose, so a missing env var fails at startup rather
+# than producing an undersized key that breaks the first request. Keep in sync with
+# api-gateway/src/main/resources/application.yml.
+jwt:
+  secret: ${JWT_SECRET}
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway,prometheus

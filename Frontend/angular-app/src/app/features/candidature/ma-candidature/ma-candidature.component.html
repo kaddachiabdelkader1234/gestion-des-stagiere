@@ -1,0 +1,289 @@
+<div class="space-y-8 animate-fade-in">
+  <!-- Header -->
+  <section class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary to-primary-dark p-8 shadow-2xl">
+    <div class="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
+    <div class="relative z-10 flex items-center space-x-3 text-white">
+      <div class="w-12 h-12 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center">
+        <span class="material-icons text-white">assignment</span>
+      </div>
+      <div>
+        <h1 class="text-3xl font-bold mb-1">Ma candidature</h1>
+        <p class="text-white/70">Envoyez votre demande de stage et suivez son statut</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Alerts -->
+  <div *ngIf="erreur" class="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4">
+    <span class="material-icons text-red-600">error_outline</span>
+    <p class="text-sm text-red-800">{{ erreur }}</p>
+  </div>
+
+  <div *ngIf="succes" class="flex items-start gap-3 rounded-2xl border border-green-200 bg-green-50 p-4">
+    <span class="material-icons text-green-600">check_circle_outline</span>
+    <p class="text-sm text-green-800">{{ succes }}</p>
+  </div>
+
+  <div *ngIf="chargement" class="rounded-2xl bg-white p-8 text-center shadow-xl border border-gray-100">
+    <p class="text-gray-500">Chargement…</p>
+  </div>
+
+  <!-- ============ NO CANDIDATURE: submission form ============ -->
+  <section *ngIf="!chargement && !candidature" class="bg-white rounded-2xl shadow-card border border-gray-100 p-8">
+    <div class="text-center mb-8">
+      <div class="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-4">
+        <span class="material-icons text-primary text-4xl">upload_file</span>
+      </div>
+      <h3 class="text-2xl font-bold text-gray-800 mb-2">Envoyer votre candidature</h3>
+      <p class="text-gray-500 max-w-lg mx-auto">
+        Remplissez le formulaire ci-dessous, téléversez le formulaire de candidature
+        fourni par votre université et votre CV.
+      </p>
+    </div>
+
+    <div class="max-w-2xl mx-auto space-y-6">
+
+      <!-- Personal info -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1.5">Prénom *</label>
+          <input [(ngModel)]="prenom" type="text" placeholder="Votre prénom"
+                 class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nom *</label>
+          <input [(ngModel)]="nom" type="text" placeholder="Votre nom"
+                 class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Adresse email *</label>
+        <input [(ngModel)]="email" type="email" placeholder="votre@email.com"
+               class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition">
+      </div>
+
+      <!-- Stage details -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1.5">Type de stage *</label>
+          <select [(ngModel)]="typeStage"
+                  class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition">
+            <option *ngFor="let t of typeStageValues" [value]="t">{{ typeStageLabels[t] }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1.5">Département souhaité *</label>
+          <input [(ngModel)]="departement" type="text" placeholder="Informatique, Finance, RH…"
+                 class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1.5">Date de début *</label>
+          <input [(ngModel)]="dateDebut" type="date"
+                 class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1.5">Date de fin *</label>
+          <input [(ngModel)]="dateFin" type="date"
+                 class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition">
+        </div>
+      </div>
+
+      <hr class="border-gray-100">
+
+      <!-- Documents -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <!-- Candidature document -->
+        <div class="rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 p-6 text-center hover:border-primary/50 transition">
+          <span class="material-icons text-primary text-4xl mb-3">description</span>
+          <h4 class="font-bold text-gray-800 mb-1">Formulaire de candidature</h4>
+          <p class="text-xs text-gray-500 mb-4">Document scanné de votre université</p>
+
+          <input type="file" (change)="onFileSelected($event, 'candidature')"
+                 class="block w-full text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-primary-dark mb-3">
+
+          <p *ngIf="fichierCandidature" class="text-sm text-green-600 font-medium">
+            <span class="material-icons text-sm align-middle">check_circle</span>
+            {{ fichierCandidature.name }}
+          </p>
+          <p *ngIf="!fichierCandidature" class="text-xs text-red-500 font-medium">* Requis</p>
+        </div>
+
+        <!-- CV -->
+        <div class="rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 p-6 text-center hover:border-gray-300 transition">
+          <span class="material-icons text-gray-400 text-4xl mb-3">person</span>
+          <h4 class="font-bold text-gray-800 mb-1">Curriculum Vitae</h4>
+          <p class="text-xs text-gray-500 mb-4">PDF, DOC, DOCX — 5 Mo max</p>
+
+          <input type="file" (change)="onFileSelected($event, 'cv')"
+                 class="block w-full text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-gray-200 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-gray-700 hover:file:bg-gray-300">
+
+          <p *ngIf="fichierCv" class="text-sm text-green-600 font-medium mt-3">
+            <span class="material-icons text-sm align-middle">check_circle</span>
+            {{ fichierCv.name }}
+          </p>
+          <p *ngIf="!fichierCv" class="text-xs text-red-500 font-medium">* Requis</p>
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <button type="button" (click)="soumettreCandidature()"
+              [disabled]="!formulaireValide || envoiEnCours"
+              class="w-full rounded-xl bg-gradient-to-r from-primary to-primary-dark px-6 py-4 text-lg font-semibold text-white shadow-lg transition hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed">
+        <span *ngIf="!envoiEnCours" class="flex items-center justify-center gap-2">
+          <span class="material-icons">send</span>
+          Soumettre ma candidature
+        </span>
+        <span *ngIf="envoiEnCours" class="flex items-center justify-center gap-2">
+          <span class="material-icons animate-spin">refresh</span>
+          Envoi en cours…
+        </span>
+      </button>
+
+      <p class="text-xs text-center text-gray-400">
+        Tous les champs marqués d'un <strong>*</strong> sont obligatoires.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ EXISTING CANDIDATURE: status + file management ============ -->
+  <section *ngIf="!chargement && candidature" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Status card -->
+    <div class="lg:col-span-2 bg-white rounded-2xl shadow-card border border-gray-100 p-6">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-xl font-bold text-gray-800">Statut de la candidature</h3>
+        <span class="px-3 py-1 rounded-full text-xs font-semibold" [ngClass]="statutBadges[candidature.statut]">
+          {{ statutLabels[candidature.statut] }}
+        </span>
+      </div>
+
+      <!-- Details -->
+      <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+        <div class="rounded-xl bg-gray-50 p-3">
+          <dt class="text-xs text-gray-400 uppercase">Candidat</dt>
+          <dd class="font-semibold text-gray-800">{{ candidature.prenom }} {{ candidature.nom }}</dd>
+        </div>
+        <div class="rounded-xl bg-gray-50 p-3">
+          <dt class="text-xs text-gray-400 uppercase">Email</dt>
+          <dd class="font-semibold text-gray-800">{{ candidature.email }}</dd>
+        </div>
+        <div class="rounded-xl bg-gray-50 p-3">
+          <dt class="text-xs text-gray-400 uppercase">Type de stage</dt>
+          <dd class="font-semibold text-gray-800">{{ typeStageLabels[candidature.typeStage] }}</dd>
+        </div>
+        <div class="rounded-xl bg-gray-50 p-3">
+          <dt class="text-xs text-gray-400 uppercase">Département</dt>
+          <dd class="font-semibold text-gray-800">{{ candidature.departement }}</dd>
+        </div>
+        <div class="rounded-xl bg-gray-50 p-3">
+          <dt class="text-xs text-gray-400 uppercase">Période</dt>
+          <dd class="font-semibold text-gray-800">{{ candidature.dateDebut | date:'dd/MM/yyyy' }} → {{ candidature.dateFin | date:'dd/MM/yyyy' }}</dd>
+        </div>
+        <div *ngIf="candidature.encadrantNom" class="rounded-xl bg-gray-50 p-3">
+          <dt class="text-xs text-gray-400 uppercase">Encadrant</dt>
+          <dd class="font-semibold text-gray-800">{{ candidature.encadrantNom }}</dd>
+        </div>
+      </dl>
+
+      <!-- Status messages -->
+      <div *ngIf="candidature.statut === 'EnAttente'" class="rounded-xl bg-amber-50 border border-amber-200 p-5">
+        <div class="flex items-center gap-3">
+          <span class="material-icons text-amber-600 text-2xl">hourglass_top</span>
+          <div>
+            <p class="font-semibold text-amber-800">En attente de traitement</p>
+            <p class="text-sm text-amber-700">Votre demande est en cours d'examen par l'administration.</p>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="candidature.statut === 'Acceptee'" class="rounded-xl bg-green-50 border border-green-200 p-5">
+        <div class="flex items-center gap-3">
+          <span class="material-icons text-green-600 text-2xl">check_circle</span>
+          <div>
+            <p class="font-semibold text-green-800">Candidature acceptée</p>
+            <p class="text-sm text-green-700">Votre demande de stage a été acceptée. Consultez votre convention.</p>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="candidature.statut === 'Rejetee'" class="rounded-xl bg-red-50 border border-red-200 p-5">
+        <div class="flex items-center gap-3">
+          <span class="material-icons text-red-600 text-2xl">cancel</span>
+          <div>
+            <p class="font-semibold text-red-800">Candidature refusée</p>
+            <p class="text-sm text-red-700">Votre demande n'a pas été retenue.</p>
+          </div>
+        </div>
+        <div *ngIf="candidature.motifRejet" class="mt-3 p-3 bg-white rounded-lg border border-red-100">
+          <p class="text-xs text-gray-400 uppercase">Motif</p>
+          <p class="text-sm text-red-800">{{ candidature.motifRejet }}</p>
+        </div>
+      </div>
+
+      <p class="mt-4 text-xs text-gray-400">
+        Soumise le {{ candidature.dateSoumission | date:'dd/MM/yyyy à HH:mm' }}
+      </p>
+    </div>
+
+    <!-- Documents panel -->
+    <div class="bg-white rounded-2xl shadow-card border border-gray-100 p-6 space-y-6">
+      <!-- Candidature document -->
+      <div>
+        <h3 class="text-lg font-bold text-gray-800 mb-1">Formulaire de candidature</h3>
+        <p class="text-xs text-gray-500 mb-3">Document scanné de votre université</p>
+
+        <div *ngIf="candidature.documentDisponible" class="mb-3 flex items-center justify-between rounded-xl border border-gray-100 p-3">
+          <span class="text-sm font-medium text-gray-700 truncate max-w-[180px]">{{ candidature.documentNomFichier }}</span>
+          <button type="button" (click)="telechargerDocument()" class="text-primary hover:text-primary-dark" title="Télécharger">
+            <span class="material-icons">download</span>
+          </button>
+        </div>
+
+        <p *ngIf="!candidature.documentDisponible" class="mb-3 text-sm text-amber-600">
+          Aucun formulaire déposé pour le moment.
+        </p>
+
+        <div *ngIf="!decisionPrise" class="space-y-2">
+          <input type="file" (change)="onFileSelected($event, 'candidature')"
+                 class="block w-full text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-primary/10 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-primary hover:file:bg-primary/20">
+          <button type="button" (click)="remplacerDocument()" [disabled]="!fichierCandidature || uploadEnCours"
+                  class="w-full rounded-xl bg-gradient-to-r from-primary to-primary-dark px-4 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:opacity-90 disabled:opacity-50">
+            {{ uploadEnCours && uploadType === 'candidature' ? 'Envoi…' : (candidature.documentDisponible ? 'Remplacer le formulaire' : 'Envoyer le formulaire') }}
+          </button>
+        </div>
+      </div>
+
+      <hr class="border-gray-100">
+
+      <!-- CV -->
+      <div>
+        <h3 class="text-lg font-bold text-gray-800 mb-1">Curriculum Vitae</h3>
+        <p class="text-xs text-gray-500 mb-3">PDF, DOC ou DOCX — 5 Mo maximum</p>
+
+        <div *ngIf="candidature.cvDisponible" class="mb-3 flex items-center justify-between rounded-xl border border-gray-100 p-3">
+          <span class="text-sm font-medium text-gray-700 truncate max-w-[180px]">{{ candidature.cvNomFichier }}</span>
+          <button type="button" (click)="telechargerCv()" class="text-primary hover:text-primary-dark" title="Télécharger">
+            <span class="material-icons">download</span>
+          </button>
+        </div>
+
+        <p *ngIf="!candidature.cvDisponible" class="mb-3 text-sm text-amber-600">
+          Aucun CV déposé pour le moment.
+        </p>
+
+        <div *ngIf="!decisionPrise" class="space-y-2">
+          <input type="file" (change)="onFileSelected($event, 'cv')"
+                 class="block w-full text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-primary/10 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-primary hover:file:bg-primary/20">
+          <button type="button" (click)="remplacerCv()" [disabled]="!fichierCv || uploadEnCours"
+                  class="w-full rounded-xl bg-gradient-to-r from-primary to-primary-dark px-4 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:opacity-90 disabled:opacity-50">
+            {{ uploadEnCours && uploadType === 'cv' ? 'Envoi…' : (candidature.cvDisponible ? 'Remplacer le CV' : 'Envoyer le CV') }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

@@ -1,0 +1,259 @@
+/* Enhanced Sidebar Styling with Fixed Shadows and Animations */
+
+/* Sidebar Container */
+aside {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+}
+
+/* Menu Item Animations */
+.animate-fade-in {
+  animation: fadeInUp 0.6s ease-out forwards;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.5s ease-out forwards;
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+@keyframes slideInRight {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Menu Item Hover Effects */
+li a {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s;
+  }
+  
+  &:hover::before {
+    left: 100%;
+  }
+  
+  &:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* Active Menu Item */
+.router-link-active {
+  position: relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 60%;
+    background: linear-gradient(to bottom, #f97316, #3b82f6);
+    border-radius: 2px 0 0 2px;
+  }
+}
+
+/* Notification Badge Styling */
+a[routerLink="/dashboard/admin-approvals"] {
+  color: white !important;
+  text-decoration: none !important;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  &:hover::before {
+    opacity: 1;
+  }
+  
+  &, &:hover, &:focus, &:active, &:visited {
+    color: white !important;
+    text-decoration: none !important;
+  }
+  
+  span, .material-icons {
+    color: white !important;
+  }
+}
+
+/* Prevent routerLinkActive from affecting notification badges */
+a[routerLink="/dashboard/admin-approvals"].router-link-active {
+  background: linear-gradient(to right, rgb(249 115 22), rgb(239 68 68)) !important;
+  color: white !important;
+}
+
+/* Pulse Animation for Notification Counts */
+.animate-pulse-slow {
+  animation: pulseSlow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulseSlow {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+/* Icon 3D Effect */
+.icon-3d {
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    right: 2px;
+    bottom: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: inherit;
+    z-index: -1;
+  }
+}
+
+/* Upgrade Button Enhancement */
+button {
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.6s;
+  }
+  
+  &:hover::before {
+    left: 100%;
+  }
+}
+
+/* User Profile Enhancement */
+.cursor-pointer {
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* Smooth Scrolling for Menu */
+ul {
+  scroll-behavior: smooth;
+  
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 2px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: linear-gradient(to bottom, #f97316, #3b82f6);
+    border-radius: 2px;
+  }
+  
+  &::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(to bottom, #ea580c, #2563eb);
+  }
+}
+
+/* Material Icons Enhancement */
+.material-icons {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  transition: all 0.3s ease;
+}
+
+li a:hover .material-icons {
+  font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+  transform: scale(1.1);
+}
+
+/* Logo Animation */
+.animate-fade-in div:first-child {
+  animation: logoFloat 3s ease-in-out infinite;
+}
+
+@keyframes logoFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+/* Responsive Enhancements */
+@media (max-width: 1279px) {
+  aside {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  aside.open {
+    transform: translateX(0);
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  aside {
+    background: rgba(17, 24, 39, 0.95);
+    backdrop-filter: blur(20px);
+  }
+  
+  li a {
+    color: rgba(229, 231, 235, 0.8);
+    
+    &:hover {
+      color: white;
+      background: rgba(55, 65, 81, 0.5);
+    }
+  }
+}

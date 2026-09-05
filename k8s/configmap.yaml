@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gestion-stagiaires-config
+  namespace: gestion-stagiaires-stb
+data:
+  ASPNETCORE_ENVIRONMENT: "Production"
+  EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: "http://eureka-server:8761/eureka/"
+  RabbitMQ__Host: "rabbitmq"
+  RabbitMQ__Username: "guest"
+  RabbitMQ__Password: "guest"
